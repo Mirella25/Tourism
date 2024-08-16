@@ -20,9 +20,7 @@ class HomePage extends StatelessWidget {
       body: Obx(() => Get.find<LogOutControllerImp>().isloading.value
           ? Center(
               child: Lottie.asset(ImageAssets.loading, width: 250, height: 250))
-          :
-          // var localeController = Get.find<MyLocaleController>();
-          Directionality(
+          : Directionality(
               textDirection:
                   localeController.initialLocale == const Locale('ar')
                       ? TextDirection.rtl
