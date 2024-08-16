@@ -27,13 +27,13 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        // backgroundColor: AppColor.appColor,
+        backgroundColor: AppColor.appColor,
         leading: InkWell(
             onTap: () => Get.back(),
             child: const Icon(Icons.arrow_back_ios_rounded,
                 color: AppColor.whiteColor)),
       ),
-      backgroundColor: AppColor.whiteColor,
+      // backgroundColor: AppColor.whiteColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(

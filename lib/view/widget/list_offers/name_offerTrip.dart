@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:tourism_app/controller/user/favorite_controller.dart';
 
 import 'package:tourism_app/core/constant/appcolor.dart';
 
 import 'package:tourism_app/view/widget/list_offers/offer_ratio.dart';
 
-class NameOfferTrip extends StatelessWidget {
+class NameOfferTrip extends StatefulWidget {
   final String name;
   final int offer;
   final void Function()? onPressedFavIcon;
@@ -27,7 +28,15 @@ class NameOfferTrip extends StatelessWidget {
   });
 
   @override
+  State<NameOfferTrip> createState() => _NameOfferTripState();
+}
+
+class _NameOfferTripState extends State<NameOfferTrip> {
+  @override
   Widget build(BuildContext context) {
+    final FavoriteControllerImp favoriteController =
+        Get.put(FavoriteControllerImp());
+    favoriteController.getFavorite();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -36,29 +45,25 @@ class NameOfferTrip extends StatelessWidget {
             SizedBox(
               width: 100,
               child: Text(
-                name,
+                widget.name,
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            OfferRatio(offer: offer),
+            OfferRatio(offer: widget.offer),
           ],
         ),
         Column(
           children: [
-            GetBuilder<FavoriteControllerImp>(builder: (controller) {
-              final isFavorite = controller.Fav[id.toString()] == 1;
+            Obx(() {
+              final isFavorite = favoriteController.listFav
+                  .any((item) => item['id'] == widget.id);
               return IconButton(
                 onPressed: () async {
-                  if (isFavorite) {
-                    controller.setFavorite(id, 0);
-                    controller.deleteFavorite(id);
-                  } else {
-                    controller.setFavorite(id, 1);
-                    controller.addFavorite(id);
-                  }
+                  await favoriteController.toggleFavorite(widget.id);
+                  setState(() {});
                 },
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border_outlined,
@@ -67,7 +72,7 @@ class NameOfferTrip extends StatelessWidget {
               );
             }),
             IconButton(
-                onPressed: onPressedInfo,
+                onPressed: widget.onPressedInfo,
                 icon:
                     const Icon(Icons.info_outline_rounded, color: Colors.grey)),
           ],

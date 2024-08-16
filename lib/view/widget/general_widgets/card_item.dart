@@ -9,7 +9,7 @@ import 'package:tourism_app/core/constant/appcolor.dart';
 import 'package:tourism_app/core/constant/routesApp.dart';
 import 'package:tourism_app/data/model/trips_model.dart';
 
-class CardItem extends StatelessWidget {
+class CardItem extends StatefulWidget {
   final TripsModel tripsModel;
   final String type;
   final int index;
@@ -26,8 +26,15 @@ class CardItem extends StatelessWidget {
   });
 
   @override
+  State<CardItem> createState() => _CardItemState();
+}
+
+class _CardItemState extends State<CardItem> {
+  @override
   Widget build(BuildContext context) {
-    Get.put(FavoriteControllerImp());
+    FavoriteControllerImp favoriteControllerImp =
+        Get.put(FavoriteControllerImp());
+    favoriteControllerImp.getFavorite();
 
     return SizedBox(
         width: 220,
@@ -42,14 +49,14 @@ class CardItem extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(22),
               onTap: () {
-                if (type == "country trips" ||
-                    type == "recommended" ||
-                    type == "offers") {
+                if (widget.type == "country trips" ||
+                    widget.type == "recommended" ||
+                    widget.type == "offers") {
                   Get.toNamed(AppRoute.tripDetails,
-                      parameters: {'id': index.toString()});
+                      parameters: {'id': widget.index.toString()});
                 } else {
                   Get.toNamed(AppRoute.facilityDetails,
-                      parameters: {'id': index.toString()});
+                      parameters: {'id': widget.index.toString()});
                 }
               },
               child: Padding(
@@ -59,19 +66,18 @@ class CardItem extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(tripsModel.photo!,
+                        child: Image.network(widget.tripsModel.photo!,
                             height: 140,
                             width: double.maxFinite,
                             fit: BoxFit.cover),
                       ),
-                      type == "country facilities"
+                      widget.type == "country facilities"
                           ? const Center()
                           : Positioned(
                               top: 10,
                               right: 10,
-                              child: GetBuilder<FavoriteControllerImp>(
-                                  builder: (controller) {
-                                if (tripsModel.id == null) {
+                              child: Obx(() {
+                                if (widget.tripsModel.id == null) {
                                   return IconButton(
                                     onPressed: () {
                                       // Handle case when ID is null
@@ -86,20 +92,16 @@ class CardItem extends StatelessWidget {
                                         color: AppColor.errorIconColor),
                                   );
                                 }
-                                final isFavorite =
-                                    controller.Fav[tripsModel.id] == 1;
+                                final isFavorite = favoriteControllerImp.listFav
+                                    .any((item) =>
+                                        item['id'] == widget.tripsModel.id);
+
                                 return IconButton(
                                     onPressed: () async {
-                                      if (isFavorite) {
-                                        controller.setFavorite(
-                                            tripsModel.id!, 0);
-                                        controller
-                                            .deleteFavorite(tripsModel.id!);
-                                      } else {
-                                        controller.setFavorite(
-                                            tripsModel.id!, 1);
-                                        controller.addFavorite(tripsModel.id!);
-                                      }
+                                      await favoriteControllerImp
+                                          .toggleFavorite(
+                                              widget.tripsModel.id!);
+                                      setState(() {});
                                     },
                                     icon: Icon(
                                       isFavorite
@@ -116,7 +118,7 @@ class CardItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          tripsModel.name!,
+                          widget.tripsModel.name!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -132,7 +134,7 @@ class CardItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       RatingBar.builder(
-                        initialRating: tripsModel.rate!,
+                        initialRating: widget.tripsModel.rate!,
                         direction: Axis.horizontal,
                         allowHalfRating: true,
                         itemCount: 5,

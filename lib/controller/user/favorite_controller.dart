@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print, non_constant_identifier_names
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,30 +7,29 @@ import 'package:tourism_app/core/constant/appcolor.dart';
 import 'package:tourism_app/core/crud/crud.dart';
 
 abstract class FavoriteController extends GetxController {
-  addFavorite(int id);
-  deleteFavorite(int id);
-  deleteFavoriteFromFav(int id);
-  getFavorite();
-  setFavorite(int id, int val);
+  Future<void> addFavorite(int id);
+  Future<void> deleteFavorite(int id);
+  Future<void> getFavorite();
+  Future<void> toggleFavorite(int id);
+  Future<void> deleteFavoriteFromFav(int id);
 }
 
 class FavoriteControllerImp extends FavoriteController {
-  var isloading = false.obs;
+  var isLoading = false.obs;
   var isloading1 = false.obs;
-  List<dynamic> listFav = [].obs;
-
-  Map<String, int> Fav = {};
+  var listFav = [].obs; // قائمة للمفضلات
 
   @override
   void onInit() {
-    getFavorite();
     super.onInit();
+    getFavorite(); // تحميل المفضلة عند البدء
   }
 
   @override
-  addFavorite(int id) async {
+  Future<void> addFavorite(int id) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? '';
+
     var response = await Crud().postRequest(route: ApiRoute.addFav, data: {
       "id": id.toString()
     }, headers: {
@@ -40,10 +37,16 @@ class FavoriteControllerImp extends FavoriteController {
       'Accept': 'application/json',
       'Authorization': 'Bearer $token'
     });
+
     var responsebody = jsonDecode(response.body);
 
     if (responsebody['status'] == 200) {
-      setFavorite(id, 1);
+      var tripData = responsebody['data'];
+      if (tripData != null) {
+        listFav.add(tripData);
+      } else {
+        print("No trip data found in response.");
+      }
       Get.snackbar("49".tr, "",
           overlayBlur: 8,
           snackStyle: SnackStyle.FLOATING,
@@ -57,13 +60,15 @@ class FavoriteControllerImp extends FavoriteController {
     } else {
       print(responsebody['message']);
     }
+
+    update();
   }
 
   @override
-  deleteFavorite(int id) async {
-    isloading1.value = true;
+  Future<void> deleteFavorite(int id) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? '';
+
     var response = await Crud().postRequest(route: ApiRoute.deleteFav, data: {
       "id": id.toString()
     }, headers: {
@@ -71,14 +76,16 @@ class FavoriteControllerImp extends FavoriteController {
       'Accept': 'application/json',
       'Authorization': 'Bearer $token'
     });
+
     var responsebody = jsonDecode(response.body);
-    isloading1.value = false;
+
     if (responsebody['status'] == 200) {
-      setFavorite(id, 0);
+      var tripData = responsebody['data']; // بيانات الرحلة
+      listFav.remove(tripData);
       Get.snackbar("49".tr, "",
           overlayBlur: 8,
           snackStyle: SnackStyle.FLOATING,
-          icon: const Icon(Icons.add_task_sharp),
+          icon: const Icon(Icons.remove_circle),
           messageText: Text(
             responsebody['message'],
             style: const TextStyle(fontSize: 18),
@@ -88,46 +95,46 @@ class FavoriteControllerImp extends FavoriteController {
     } else {
       print(responsebody['message']);
     }
+
     update();
   }
 
   @override
-  getFavorite() async {
-    isloading.value = true;
+  Future<void> getFavorite() async {
+    isLoading.value = true;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? '';
+
     var response = await Crud().getRequest(route: ApiRoute.getFav, headers: {
       'Content-type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer $token'
     });
+
     var responsebody = jsonDecode(response.body);
 
-    isloading.value = false;
     if (responsebody['status'] == 200 && responsebody['data'] != null) {
-      listFav = responsebody['data'];
-
-      for (var favItem in listFav) {
-        int favourite = favItem['favourite'] ?? 0;
-        Fav[favItem['id'].toString()] = favourite;
-        await prefs.setInt(favItem['id'].toString(), favourite);
-      }
+      listFav.value = List<Map<String, dynamic>>.from(responsebody['data']);
     } else {
       print(responsebody['message']);
     }
+
+    isLoading.value = false;
     update();
   }
 
   @override
-  setFavorite(int id, int val) async {
-    Fav[id.toString()] = val;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(id.toString(), val);
-    update();
+  Future<void> toggleFavorite(int id) async {
+    // تحقق مما إذا كانت القائمة تحتوي على عنصر يحتوي على نفس المعرف
+    if (listFav.any((item) => item['id'] == id)) {
+      await deleteFavorite(id);
+    } else {
+      await addFavorite(id);
+    }
   }
 
   @override
-  deleteFavoriteFromFav(int id) async {
+  Future<void> deleteFavoriteFromFav(int id) async {
     isloading1.value = true;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? '';
@@ -158,3 +165,153 @@ class FavoriteControllerImp extends FavoriteController {
     update();
   }
 }
+// abstract class FavoriteController extends GetxController {
+//   addFavorite(int id);
+//   deleteFavorite(int id);
+//   deleteFavoriteFromFav(int id);
+//   getFavorite();
+//   setFavorite(int id, int val);
+// }
+
+// class FavoriteControllerImp extends FavoriteController {
+//   var isloading = false.obs;
+//   var isloading1 = false.obs;
+//   List<dynamic> listFav = [].obs;
+
+//   Map<String, int> Fav = {};
+
+//   @override
+//   void onInit() {
+//     getFavorite();
+//     super.onInit();
+//   }
+
+//   @override
+//   addFavorite(int id) async {
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     String token = prefs.getString('token') ?? '';
+//     var response = await Crud().postRequest(route: ApiRoute.addFav, data: {
+//       "id": id.toString()
+//     }, headers: {
+//       'Content-type': 'application/json',
+//       'Accept': 'application/json',
+//       'Authorization': 'Bearer $token'
+//     });
+//     var responsebody = jsonDecode(response.body);
+
+//     if (responsebody['status'] == 200) {
+//       setFavorite(id, 1);
+//       Get.snackbar("49".tr, "",
+//           overlayBlur: 8,
+//           snackStyle: SnackStyle.FLOATING,
+//           icon: const Icon(Icons.add_task_sharp),
+//           messageText: Text(
+//             responsebody['message'],
+//             style: const TextStyle(fontSize: 18),
+//           ),
+//           margin: const EdgeInsets.all(20),
+//           backgroundColor: AppColor.mainColor.withOpacity(0.8));
+//     } else {
+//       print(responsebody['message']);
+//     }
+//   }
+
+//   @override
+//   deleteFavorite(int id) async {
+//     isloading1.value = true;
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     String token = prefs.getString('token') ?? '';
+//     var response = await Crud().postRequest(route: ApiRoute.deleteFav, data: {
+//       "id": id.toString()
+//     }, headers: {
+//       'Content-type': 'application/json',
+//       'Accept': 'application/json',
+//       'Authorization': 'Bearer $token'
+//     });
+//     var responsebody = jsonDecode(response.body);
+//     isloading1.value = false;
+//     if (responsebody['status'] == 200) {
+//       setFavorite(id, 0);
+//       Get.snackbar("49".tr, "",
+//           overlayBlur: 8,
+//           snackStyle: SnackStyle.FLOATING,
+//           icon: const Icon(Icons.add_task_sharp),
+//           messageText: Text(
+//             responsebody['message'],
+//             style: const TextStyle(fontSize: 18),
+//           ),
+//           margin: const EdgeInsets.all(20),
+//           backgroundColor: AppColor.mainColor.withOpacity(0.8));
+//     } else {
+//       print(responsebody['message']);
+//     }
+//     update();
+//   }
+
+//   @override
+//   getFavorite() async {
+//     isloading.value = true;
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     String token = prefs.getString('token') ?? '';
+//     var response = await Crud().getRequest(route: ApiRoute.getFav, headers: {
+//       'Content-type': 'application/json',
+//       'Accept': 'application/json',
+//       'Authorization': 'Bearer $token'
+//     });
+//     var responsebody = jsonDecode(response.body);
+
+//     isloading.value = false;
+//     if (responsebody['status'] == 200 && responsebody['data'] != null) {
+//       listFav = responsebody['data'];
+
+//       for (var favItem in listFav) {
+//         int favourite = favItem['favourite'] ?? 0;
+//         Fav[favItem['id'].toString()] = favourite;
+//         await prefs.setInt(favItem['id'].toString(), favourite);
+//       }
+//     } else {
+//       print(responsebody['message']);
+//     }
+//     update();
+//   }
+
+//   @override
+//   setFavorite(int id, int val) async {
+//     Fav[id.toString()] = val;
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     await prefs.setInt(id.toString(), val);
+//     update();
+//   }
+
+//   @override
+//   deleteFavoriteFromFav(int id) async {
+//     isloading1.value = true;
+//     SharedPreferences prefs = await SharedPreferences.getInstance();
+//     String token = prefs.getString('token') ?? '';
+//     var response = await Crud().postRequest(route: ApiRoute.deleteFav, data: {
+//       "id": id.toString()
+//     }, headers: {
+//       'Content-type': 'application/json',
+//       'Accept': 'application/json',
+//       'Authorization': 'Bearer $token'
+//     });
+//     var responsebody = jsonDecode(response.body);
+//     isloading1.value = false;
+//     if (responsebody['status'] == 200) {
+//       listFav.removeWhere((item) => item['id'] == id);
+//       Get.snackbar("49".tr, "",
+//           overlayBlur: 8,
+//           snackStyle: SnackStyle.FLOATING,
+//           icon: const Icon(Icons.add_task_sharp),
+//           messageText: Text(
+//             responsebody['message'],
+//             style: const TextStyle(fontSize: 18),
+//           ),
+//           margin: const EdgeInsets.all(20),
+//           backgroundColor: AppColor.mainColor.withOpacity(0.8));
+//     } else {
+//       print(responsebody['message']);
+//     }
+//     update();
+//   }
+// }

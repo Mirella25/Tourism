@@ -35,7 +35,7 @@ class FavoritePage extends StatelessWidget {
       ),
       body: SafeArea(
         child: Obx(() {
-          if (controllerImp.isloading.value || controllerImp.isloading1.value) {
+          if (controllerImp.isLoading.value || controllerImp.isloading1.value) {
             return Center(
                 child:
                     Lottie.asset(ImageAssets.loading, width: 250, height: 250));
@@ -64,16 +64,17 @@ class FavoritePage extends StatelessWidget {
               padding: const EdgeInsets.only(top: 10, bottom: 15),
               itemCount: controllerImp.listFav.length,
               itemBuilder: (context, index) {
+                var trip = controllerImp.listFav[index] as Map<String, dynamic>;
+
                 return SlideFavoriteTrip(
-                  image: controllerImp.listFav[index]['photo'],
-                  name: controllerImp.listFav[index]['name'],
-                  desc: controllerImp.listFav[index]['bio'],
-                  numOfPlaces: controllerImp.listFav[index]
-                      ['number_of_available_places'],
-                  tripPrice: controllerImp.listFav[index]['price_per_one_new'],
-                  startDate: controllerImp.listFav[index]['start_date'],
-                  endDate: controllerImp.listFav[index]['end_date'],
-                  id: controllerImp.listFav[index]['id'],
+                  image: trip['photo'] ?? '',
+                  name: trip['name'] ?? '',
+                  desc: trip['bio'] ?? '',
+                  numOfPlaces: trip['number_of_available_places'] ?? 0,
+                  tripPrice: trip['price_per_one_new'] ?? 0.0,
+                  startDate: trip['start_date'] ?? '',
+                  endDate: trip['end_date'] ?? '',
+                  id: trip['id'] ?? 0,
                 );
               },
             );

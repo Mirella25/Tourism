@@ -24,7 +24,9 @@ class _TripsAndFacilitiesScreenState extends State<TripsAndFacilitiesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(FavoriteControllerImp());
+    FavoriteControllerImp favoriteControllerImp =
+        Get.put(FavoriteControllerImp());
+    favoriteControllerImp.getFavorite();
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,
@@ -82,8 +84,7 @@ class _TripsAndFacilitiesScreenState extends State<TripsAndFacilitiesScreen> {
                               Column(
                                 children: [
                                   widget.type == "trips"
-                                      ? GetBuilder<FavoriteControllerImp>(
-                                          builder: (controller) {
+                                      ? Obx(() {
                                           if (list[index].id == null) {
                                             return IconButton(
                                               onPressed: () {
@@ -102,21 +103,17 @@ class _TripsAndFacilitiesScreenState extends State<TripsAndFacilitiesScreen> {
                                             );
                                           }
                                           final isFavorite =
-                                              controller.Fav[list[index].id] ==
-                                                  1;
+                                              favoriteControllerImp.listFav.any(
+                                                  (item) =>
+                                                      item['id'] ==
+                                                      list[index].id);
+
                                           return IconButton(
                                               onPressed: () async {
-                                                if (isFavorite) {
-                                                  controller.setFavorite(
-                                                      list[index].id!, 0);
-                                                  controller.deleteFavorite(
-                                                      list[index].id!);
-                                                } else {
-                                                  controller.setFavorite(
-                                                      list[index].id!, 1);
-                                                  controller.addFavorite(
-                                                      list[index].id!);
-                                                }
+                                                await favoriteControllerImp
+                                                    .toggleFavorite(
+                                                        list[index].id!);
+                                                setState(() {});
                                               },
                                               icon: Icon(
                                                 isFavorite

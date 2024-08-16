@@ -37,7 +37,8 @@ class _TripDetailsState extends State<TripDetails> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(FavoriteControllerImp());
+    FavoriteControllerImp favoriteControllerImp =
+        Get.put(FavoriteControllerImp());
     return Scaffold(
       // backgroundColor: AppColor.whiteColor,
       body: GetBuilder<TripDetailsController>(builder: (tripDetailsController) {
@@ -204,21 +205,14 @@ class _TripDetailsState extends State<TripDetails> {
                                     );
                                   }
 
-                                  final isFavorite =
-                                      controller.Fav[tripDetails.id] == 1;
+                                  final isFavorite = controller.listFav.any(
+                                      (item) => item['id'] == tripDetails.id);
+
                                   return IconButton(
                                       onPressed: () async {
-                                        if (isFavorite) {
-                                          await controller.setFavorite(
-                                              tripDetails.id!, 0);
-                                          await controller
-                                              .deleteFavorite(tripDetails.id!);
-                                        } else {
-                                          await controller.setFavorite(
-                                              tripDetails.id!, 1);
-                                          await controller
-                                              .addFavorite(tripDetails.id!);
-                                        }
+                                        controller
+                                            .toggleFavorite(tripDetails.id!);
+                                        setState(() {});
                                       },
                                       icon: Icon(
                                         isFavorite

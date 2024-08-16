@@ -14,9 +14,14 @@ import 'package:tourism_app/view/screen/user_screens/home/widgets/home_search.da
 import 'package:tourism_app/view/widget/general_widgets/general_list_view.dart';
 import 'package:tourism_app/view/widget/general_widgets/text_with_icon.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     Get.lazyPut(() => HomeControllerImp(homeService: HomeService()));

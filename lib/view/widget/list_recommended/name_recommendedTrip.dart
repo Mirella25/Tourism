@@ -7,7 +7,7 @@ import 'package:tourism_app/controller/user/favorite_controller.dart';
 
 import 'package:tourism_app/core/constant/appcolor.dart';
 
-class NameRecommendedTrip extends StatelessWidget {
+class NameRecommendedTrip extends StatefulWidget {
   final String name;
   final int rate;
   final void Function()? onPressedFavIcon;
@@ -25,15 +25,23 @@ class NameRecommendedTrip extends StatelessWidget {
       this.onPressedInfo});
 
   @override
+  State<NameRecommendedTrip> createState() => _NameRecommendedTripState();
+}
+
+class _NameRecommendedTripState extends State<NameRecommendedTrip> {
+  @override
   Widget build(BuildContext context) {
-    Get.put(FavoriteControllerImp());
+    final FavoriteControllerImp favoriteController =
+        Get.put(FavoriteControllerImp());
+    favoriteController.getFavorite();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         SizedBox(
           width: 100,
           child: Text(
-            name,
+            widget.name,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -41,18 +49,13 @@ class NameRecommendedTrip extends StatelessWidget {
         ),
         Column(
           children: [
-            GetBuilder<FavoriteControllerImp>(builder: (controller) {
-              final isFavorite = controller.Fav[id.toString()] == 1;
+            Obx(() {
+              final isFavorite = favoriteController.listFav
+                  .any((item) => item['id'] == widget.id);
               return IconButton(
                 onPressed: () async {
-                  if (isFavorite) {
-                    controller.setFavorite(id, 0);
-                    controller.deleteFavorite(id);
-                  } else {
-                    controller.setFavorite(
-                        id, 1); // تحديث الحالة عند إضافة المفضلة
-                    controller.addFavorite(id);
-                  }
+                  await favoriteController.toggleFavorite(widget.id);
+                  setState(() {});
                 },
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border_outlined,
@@ -61,7 +64,7 @@ class NameRecommendedTrip extends StatelessWidget {
               );
             }),
             IconButton(
-                onPressed: onPressedInfo,
+                onPressed: widget.onPressedInfo,
                 icon: const Icon(
                   Icons.info_outline_rounded,
                   color: Colors.grey,
